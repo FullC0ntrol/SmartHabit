@@ -22,7 +22,7 @@ HabitTracker to aplikacja stworzona w celu pomagania użytkownikom w tworzeniu i
 
 ---
 
-## Funkcjonalności
+## TO-DO 
 
 ### Etap 1: Kalendarz + Konto
 - **Kalendarz**: Przeglądanie miesięcznego kalendarza, z możliwością kliknięcia na dzień i przypisania ćwiczenia/nawyku.
