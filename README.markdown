@@ -36,21 +36,63 @@ HabitTracker to aplikacja wspierająca zarządzanie nawykami i planami ćwiczeń
 
 ## Struktura projektu
 
-### Frontend
-- **`src/App.jsx`**: Główny komponent, zarządza stanem logowania, renderuje `LoginForm`, `RegisterForm` lub `Home`.
-- **`src/components/LoginForm.jsx`**: Formularz logowania, integruje się z `useLogin` do wysyłania danych do backendu.
-- **`src/components/RegisterForm.jsx`**: Formularz rejestracji, używa `useRegister`, przełącza na logowanie po sukcesie.
-- **`src/pages/Home.jsx`**: Ekran główny, wyświetla placeholder dla kalendarza, przycisk wylogowania i checkbox dla komponentu `Aaa`.
-- **`src/hooks/useAuth.jsx`**: Hook do uwierzytelniania, weryfikuje token JWT, obsługuje logowanie/wylogowanie.
-- **`src/hooks/useLogin.jsx`**: Hook do logowania, zapisuje token w `localStorage`.
-- **`src/hooks/useRegister.jsx`**: Hook do rejestracji, wysyła dane do backendu.
+Poniżej znajduje się drzewko katalogów projektu, pokazujące, gdzie umieszczać nowe pliki i tworzyć komponenty. Kluczowe foldery i pliki są oznaczone, z wytycznymi dla przyszłych dodatków.
 
-### Backend
-- Endpointy API:
-  - `/login`: Autoryzacja użytkownika, zwraca token JWT.
-  - `/register`: Tworzenie konta w MySQL.
-  - `/verify-token`: Weryfikacja tokenu.
-- Baza MySQL przechowuje dane użytkowników (nazwa, hashowane hasło).
+```
+smarthabit/
+├── src/
+│   ├── components/              # Komponenty UI (formularze, widżety)
+│   │   ├── LoginForm.jsx       # Formularz logowania
+│   │   └── RegisterForm.jsx    # Formularz rejestracji
+│   │   # Nowe: np. Calendar.jsx, HabitCard.jsx
+│   ├── hooks/                  # Niestandardowe hooki React
+│   │   ├── useAuth.jsx         # Logika uwierzytelniania
+│   │   ├── useLogin.jsx        # Logika logowania
+│   │   └── useRegister.jsx     # Logika rejestracji
+│   │   # Nowe: np. useHabits.jsx, useCalendar.jsx
+│   ├── pages/                  # Główne widoki aplikacji
+│   │   ├── Home.jsx            # Ekran główny
+│   │   └── Aaa.jsx             # Placeholder (do zdefiniowania/usunięcia)
+│   │   # Nowe: np. Dashboard.jsx, Settings.jsx
+│   ├── assets/                 # Statyczne zasoby (obrazy, ikony)
+│   │   # Nowe: np. habit-icons/, backgrounds/
+│   └── App.jsx                 # Główny komponent aplikacji
+└── server/                     # Backend (Node.js/Express)
+    # Nowe: np. routes/habits.js, models/Habit.js
+```
+
+**Wytyczne dla nowych plików**:
+- **Komponenty UI**: Dodawaj do `components/` (np. `Calendar.jsx` dla kalendarza, `HabitCard.jsx` dla nawyków).
+- **Hooki**: Umieszczaj w `hooks/` (np. `useHabits.jsx` do pobierania nawyków, `useCalendar.jsx` do zarządzania kalendarzem).
+- **Strony**: Twórz w `pages/` (np. `Dashboard.jsx` dla widoku statystyk, `Settings.jsx` dla ustawień).
+- **Zasoby**: Przechowuj w `assets/` (np. ikony nawyków w `assets/habit-icons/`).
+- **Backend**: Dodawaj nowe trasy w `server/routes/` (np. `habits.js`) i modele w `server/models/` (np. `Habit.js`).
+
+### Diagram struktury (Mermaid)
+Jeśli używasz GitHub, możesz wkleić poniższy kod Mermaid, aby wygenerować diagram flowchart:
+
+```mermaid
+graph TD
+    A[smarthabit/] --> B[src/]
+    B --> C[components/]
+    B --> D[hooks/]
+    B --> E[pages/]
+    B --> F[assets/]
+    B --> G[App.jsx]
+    A --> H[server/]
+    C --> C1[LoginForm.jsx]
+    C --> C2[RegisterForm.jsx]
+    C --> C3[...nowe, np. Calendar.jsx]
+    D --> D1[useAuth.jsx]
+    D --> D2[useLogin.jsx]
+    D --> D3[useRegister.jsx]
+    D --> D4[...nowe, np. useHabits.jsx]
+    E --> E1[Home.jsx]
+    E --> E2[Aaa.jsx]
+    E --> E3[...nowe, np. Dashboard.jsx]
+    F --> F1[...nowe, np. habit-icons/]
+    H --> H1[...nowe, np. routes/habits.js]
+```
 
 ## Instalacja
 
