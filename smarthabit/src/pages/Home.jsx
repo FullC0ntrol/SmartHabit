@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Aaa from '../pages/aaa.jsx';
+import Aaa from '.Aaa.jsx';
 import useAuth from '../hooks/useAuth.jsx';
 
 const Home = () => {
