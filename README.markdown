@@ -1,13 +1,5 @@
 # HabitTracker - Inteligentny Śledzik Nawyków
 
-sequenceDiagram
-    Frontend->>Backend: POST /login {username, password}
-    Backend->>MySQL: Weryfikacja użytkownika
-    MySQL-->>Backend: Dane użytkownika
-    Backend-->>Frontend: JWT token
-    Frontend->>LocalStorage: Zapis tokena
-
-
 **HabitTracker** to aplikacja webowa do śledzenia nawyków i ćwiczeń, z planem rozwoju w estetyczne urządzenie ścienne oparte na Raspberry Pi z ekranem dotykowym. Umożliwia użytkownikom rejestrację, logowanie i przeglądanie spersonalizowanego ekranu głównego z placeholderem dla kalendarza. Aplikacja jest hostowana na VPS z bazą danych MySQL, z frontendem w React i backendem w Node.js/Express.
 
 ## Spis Treści
@@ -16,11 +8,13 @@ sequenceDiagram
 2. [Funkcjonalności](#funkcjonalności)
 3. [Technologie](#technologie)
 4. [Struktura projektu](#struktura-projektu)
-5. [Instalacja](#instalacja)
-6. [Wdrożenie](#wdrożenie)
-7. [Roadmap](#roadmap)
-8. [Inspiracje](#inspiracje)
-9. [Licencja](#licencja)
+5. [Czym są hooki?](#czym-są-hooki)
+6. [Jak działa backend?](#jak-działa-backend)
+7. [Instalacja](#instalacja)
+8. [Wdrożenie](#wdrożenie)
+9. [Roadmap](#roadmap)
+10. [Inspiracje](#inspiracje)
+11. [Licencja](#licencja)
 
 ## Opis
 
@@ -44,7 +38,7 @@ HabitTracker to aplikacja wspierająca zarządzanie nawykami i planami ćwiczeń
 
 ## Struktura projektu
 
-Poniżej znajduje się drzewko katalogów projektu, pokazujące, gdzie umieszczać nowe pliki i tworzyć komponenty. Kluczowe foldery i pliki są oznaczone, z wytycznymi dla przyszłych dodatków.
+Poniżej znajduje się drzewko katalogów projektu, pokazujące obecne pliki i sugerujące, gdzie umieszczać nowe komponenty w przyszłości. Drzewko jest zoptymalizowane dla czytelności, z wytycznymi dla nowych plików.
 
 ```
 smarthabit/
@@ -59,8 +53,8 @@ smarthabit/
 │   │   └── useRegister.jsx     # Logika rejestracji
 │   │   # Nowe: np. useHabits.jsx, useCalendar.jsx
 │   ├── pages/                  # Główne widoki aplikacji
-│   │   ├── Home.jsx            # Ekran główny
-│   │   └── Aaa.jsx             # Placeholder (do zdefiniowania/usunięcia)
+│   │   ├── Aaa.jsx             # Placeholder (do zdefiniowania/usunięcia)
+│   │   └── Home.jsx            # Ekran główny
 │   │   # Nowe: np. Dashboard.jsx, Settings.jsx
 │   ├── assets/                 # Statyczne zasoby (obrazy, ikony)
 │   │   # Nowe: np. habit-icons/, backgrounds/
@@ -70,37 +64,84 @@ smarthabit/
 ```
 
 **Wytyczne dla nowych plików**:
-- **Komponenty UI**: Dodawaj do `components/` (np. `Calendar.jsx` dla kalendarza, `HabitCard.jsx` dla nawyków).
-- **Hooki**: Umieszczaj w `hooks/` (np. `useHabits.jsx` do pobierania nawyków, `useCalendar.jsx` do zarządzania kalendarzem).
-- **Strony**: Twórz w `pages/` (np. `Dashboard.jsx` dla widoku statystyk, `Settings.jsx` dla ustawień).
-- **Zasoby**: Przechowuj w `assets/` (np. ikony nawyków w `assets/habit-icons/`).
-- **Backend**: Dodawaj nowe trasy w `server/routes/` (np. `habits.js`) i modele w `server/models/` (np. `Habit.js`).
+- **Komponenty UI**: Dodawaj do `components/` (np. `Calendar.jsx` dla kalendarza, `HabitCard.jsx` dla wyświetlania nawyków).
+- **Hooki**: Umieszczaj w `hooks/` (np. `useHabits.jsx` do pobierania danych nawyków, `useCalendar.jsx` do zarządzania kalendarzem).
+- **Strony**: Twórz w `pages/` (np. `Dashboard.jsx` dla statystyk, `Settings.jsx` dla ustawień użytkownika).
+- **Zasoby**: Przechowuj w `assets/` (np. ikony w `assets/habit-icons/`, tła w `assets/backgrounds/`).
+- **Backend**: Dodawaj trasy w `server/routes/` (np. `habits.js` dla nawyków) i modele w `server/models/` (np. `Habit.js`).
 
 ### Diagram struktury (Mermaid)
-Jeśli używasz GitHub, możesz wkleić poniższy kod Mermaid, aby wygenerować diagram flowchart:
+Poniższy diagram w formacie Mermaid (obsługiwanym przez GitHub) wizualizuje strukturę projektu, grupując pliki według ich roli i pokazując wszystkie istniejące pliki `.jsx`. Jest czytelniejszy dzięki podziałowi na kategorie i strzałkom wskazującym zależności.
 
 ```mermaid
 graph TD
     A[smarthabit/] --> B[src/]
+    A --> H[server/]
     B --> C[components/]
     B --> D[hooks/]
     B --> E[pages/]
     B --> F[assets/]
     B --> G[App.jsx]
-    A --> H[server/]
-    C --> C1[LoginForm.jsx]
-    C --> C2[RegisterForm.jsx]
-    C --> C3[...nowe, np. Calendar.jsx]
-    D --> D1[useAuth.jsx]
-    D --> D2[useLogin.jsx]
-    D --> D3[useRegister.jsx]
-    D --> D4[...nowe, np. useHabits.jsx]
-    E --> E1[Home.jsx]
-    E --> E2[Aaa.jsx]
-    E --> E3[...nowe, np. Dashboard.jsx]
-    F --> F1[...nowe, np. habit-icons/]
-    H --> H1[...nowe, np. routes/habits.js]
+    
+    subgraph Komponenty UI
+        C --> C1[LoginForm.jsx]
+        C --> C2[RegisterForm.jsx]
+        C --> C3[...np. Calendar.jsx]
+    end
+    
+    subgraph Hooki
+        D --> D1[useAuth.jsx]
+        D --> D2[useLogin.jsx]
+        D --> D3[useRegister.jsx]
+        D --> D4[...np. useHabits.jsx]
+    end
+    
+    subgraph Strony
+        E --> E1[Home.jsx]
+        E --> E2[Aaa.jsx]
+        E --> E3[...np. Dashboard.jsx]
+    end
+    
+    subgraph Zasoby
+        F --> F1[...np. habit-icons/]
+    end
+    
+    subgraph Backend
+        H --> H1[...np. routes/habits.js]
+        H --> H2[...np. models/Habit.js]
+    end
+    
+    G -->|Używa| C
+    G -->|Używa| D
+    G -->|Używa| E
+    C1 -->|Używa| D2
+    C2 -->|Używa| D3
+    E1 -->|Używa| D1
 ```
+
+## Czym są hooki?
+
+Hooki w React to specjalne funkcje, które pozwalają zarządzać stanem i logiką w komponentach funkcyjnych, bez potrzeby używania klas. W projekcie HabitTracker hooki separują logikę od interfejsu, czyniąc kod bardziej czytelnym i reusable. Przykłady:
+- **`useAuth.jsx`**: Zarządza stanem uwierzytelniania (logowanie, wylogowanie, weryfikacja tokenu).
+- **`useLogin.jsx`**: Obsługuje proces logowania, wysyłając dane do backendu i zapisując token.
+- **`useRegister.jsx`**: Odpowiada za rejestrację nowego użytkownika.
+
+**Jak używać?** Twórz nowe hooki w `hooks/` dla specyficznych zadań, np. `useHabits.jsx` do pobierania listy nawyków z backendu.
+
+## Jak działa backend?
+
+Backend HabitTracker działa na Node.js z frameworkiem Express i komunikuje się z bazą danych MySQL. Obsługuje trzy główne endpointy:
+- **`/login`**: Przyjmuje nazwę użytkownika i hasło (POST), weryfikuje je w MySQL (hasło hashowane z `bcryptjs`), generuje token JWT i zwraca go z nazwą użytkownika.
+- **`/register`**: Tworzy nowego użytkownika w MySQL (POST), haszując hasło i zapisując dane.
+- **`/verify-token`**: Sprawdza ważność tokenu JWT z nagłówka `Authorization`, zwracając dane użytkownika, jeśli token jest poprawny.
+
+**Przepływ**:
+1. Frontend wysyła żądanie (np. `fetch` do `/login`).
+2. Express przetwarza żądanie, komunikuje się z MySQL (np. sprawdza użytkownika).
+3. Backend zwraca odpowiedź (np. token lub błąd).
+4. Token jest zapisywany w `localStorage` i używany w kolejnych żądaniach.
+
+**Rozwój**: Dodaj nowe endpointy w `server/routes/` (np. `/habits` dla nawyków) i modele w `server/models/` (np. `Habit.js` dla struktury danych nawyków).
 
 ## Instalacja
 
