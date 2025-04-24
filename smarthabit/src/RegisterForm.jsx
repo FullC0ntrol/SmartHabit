@@ -11,7 +11,7 @@ export default function RegisterForm({ onRegisterSuccess }) {
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3001/register', {
+      const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -34,7 +34,7 @@ export default function RegisterForm({ onRegisterSuccess }) {
 
   return (
     <div className="p-6 max-w-md mx-auto bg-white rounded shadow">
-      <h2 className="text-xl mb-4">Rejestracja</h2>
+      <h2 className="text-xl mb-4">Rejestracja HUJA TAM</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <input
         type="text"
