@@ -45,6 +45,7 @@ const useAuth = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
     setUsername('');
+    window.location.reload();
   };
 
   return { isLoggedIn, username, login, logout, loading };

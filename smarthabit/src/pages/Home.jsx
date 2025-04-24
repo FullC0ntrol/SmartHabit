@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import Aaa from './Aaa.jsx';
+import Aaa from '../pages/Aaa.jsx';
+import useAuth from '../hooks/useAuth.jsx';
+
 const Home = () => {
     const [showAaa, setShowAaa] = useState(false);
+    const { logout } = useAuth(); // Używamy hooka do obsługi logowania
+
+
     const handleCheckboxChange = (event) => {
         setShowAaa(event.target.checked);
         console.log(showAaa);
@@ -17,7 +22,9 @@ const Home = () => {
                     checked={showAaa}
             />
             {showAaa ? ( <Aaa/> ) : null}
-            
+            <button
+                    onClick={logout}
+            >LOGNIJ</button>
         </div>
     );
 };
