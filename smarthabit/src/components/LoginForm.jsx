@@ -1,34 +1,16 @@
 import { useState } from 'react';
+import useLogin from '../hooks/useLogin'; // Importujemy useLogin
 
 export default function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, error, isLoading } = useLogin(); // Używamy hooka useLogin
 
-  const login = async () => {
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const res = await fetch('http://localhost:3001/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        onLoginSuccess(data.username);
-      } else {
-        setError(data.error || 'Błąd logowania');
-      }
-    } catch (err) {
-      setError('Błąd serwera. Spróbuj ponownie.', err);
-    } finally {
-      setIsLoading(false);
+  const handleLogin = async () => {
+    const result = await login(username, password); // Wywołujemy funkcję login z useLogin
+    if (result) {
+      // Jeśli logowanie się udało, wywołujemy onLoginSuccess
+      onLoginSuccess(result); // Przekazujemy nazwę użytkownika
     }
   };
 
@@ -53,7 +35,7 @@ export default function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
         disabled={isLoading}
       />
       <button
-        onClick={login}
+        onClick={handleLogin}
         disabled={isLoading}
         className={`bg-blue-500 text-white p-2 w-full rounded ${
           isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'

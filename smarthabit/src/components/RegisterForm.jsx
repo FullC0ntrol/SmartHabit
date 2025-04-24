@@ -1,40 +1,24 @@
 import { useState } from 'react';
+import useRegister from '../hooks/useRegister'; // Zmieniamy ścieżkę na '../hooks/useRegister'
+
 
 export default function RegisterForm({ onRegisterSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { register, error, isLoading } = useRegister(); // Używamy hooka
 
-  const register = async () => {
-    setError('');
-    setIsLoading(true);
+  const handleRegister = async () => {
+    const isSuccessful = await register(username, password);
 
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        onRegisterSuccess();
-        alert('Rejestracja udana! Możesz się zalogować.');
-      } else {
-        setError(data.error || 'Błąd rejestracji');
-      }
-    } catch (err) {
-      setError('Błąd serwera. Spróbuj ponownie.');
-    } finally {
-      setIsLoading(false);
+    if (isSuccessful) {
+      onRegisterSuccess(); // Po udanej rejestracji przełączamy do logowania
+      alert('Rejestracja udana! Możesz się zalogować.');
     }
   };
 
   return (
     <div className="p-6 max-w-md mx-auto bg-white rounded shadow">
-      <h2 className="text-xl mb-4">Rejestracja HUJA TAM</h2>
+      <h2 className="text-xl mb-4">Rejestracja</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <input
         type="text"
@@ -53,11 +37,9 @@ export default function RegisterForm({ onRegisterSuccess }) {
         disabled={isLoading}
       />
       <button
-        onClick={register}
+        onClick={handleRegister}
         disabled={isLoading}
-        className={`bg-green-500 text-white p-2 w-full rounded ${
-          isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'
-        }`}
+        className={`bg-green-500 text-white p-2 w-full rounded ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
       >
         {isLoading ? 'Rejestracja...' : 'Zarejestruj się'}
       </button>

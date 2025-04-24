@@ -46,7 +46,7 @@ const authenticateToken = (req, res, next) => {
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
-  if (!username || !password || username.length < 3 || password.length < 6) {
+  if (!username || !password) {
     return res.status(400).json({ error: 'Nieprawidłowy login lub hasło' });
   }
 
@@ -95,23 +95,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Zapis daty (z autoryzacją)
-app.post('/api/save-date', authenticateToken, async (req, res) => {
-  const { date } = req.body;
-  const user_id = req.user.id;
-
-  if (!date) {
-    return res.status(400).json({ error: 'Brak daty' });
-  }
-
-  try {
-    await db.promise().query('INSERT INTO dates (user_id, selected_date) VALUES (?, ?)', [user_id, date]);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('❌ Błąd zapisu do bazy:', err);
-    res.status(500).json({ error: 'Błąd zapisu' });
-  }
-});
 
 // Weryfikacja tokenu
 app.get('/verify-token', authenticateToken, (req, res) => {
