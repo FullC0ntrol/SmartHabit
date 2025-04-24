@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Aaa from './Aaa.jsx';
 import useAuth from '../hooks/useAuth.jsx';
+import MyCalendar from '../components/MyCalendar.jsx';
 
 const Home = () => {
     const [showAaa, setShowAaa] = useState(false);
@@ -21,7 +22,7 @@ const Home = () => {
                     onChange={handleCheckboxChange}
                     checked={showAaa}
             />
-            {showAaa ? ( <Aaa/> ) : null}
+            {showAaa ? ( <MyCalendar/> ) : null}
             <button
                     onClick={logout}
             >LOGNIJ</button>
