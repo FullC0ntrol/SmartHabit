@@ -1,55 +1,124 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+require('dotenv').config(); // Dodajemy obsługę zmiennych środowiskowych
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'tajny_klucz'; // Przenieś do .env
 
 app.use(cors());
 app.use(express.json());
 
-// 🔗 Połączenie z MySQL
+// Połączenie z MySQL
 const db = mysql.createConnection({
-  host: '57.128.194.135',        // jeśli backend działa na tym samym VPS co MySQL
-  user: 'habituser',
-  password: '1234!@QWERty',
-  database: 'habit_tracker'
+  host: process.env.DB_HOST || '57.128.194.135',
+  user: process.env.DB_USER || 'habituser',
+  password: process.env.DB_PASSWORD || '1234!@QWERty',
+  database: process.env.DB_NAME || 'habit_tracker',
 });
 
 db.connect((err) => {
   if (err) {
     console.error('❌ Błąd połączenia z MySQL:', err);
-    return;
+    process.exit(1);
   }
   console.log('✅ Połączono z bazą MySQL!');
 });
 
+// Middleware do weryfikacji tokenu
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
 
+  if (!token) return res.status(401).json({ error: 'Brak tokenu' });
 
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Nieprawidłowy token' });
+    req.user = user;
+    next();
+  });
+};
 
+// Rejestracja
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
 
-// 📥 Endpoint do zapisu daty
-app.post('/api/save-date', (req, res) => {
-  const { user_id, date } = req.body;
-    console.log(user_id);
-    console.log(date);
-
-  if (!user_id || !date) {
-    return res.status(400).json({ error: 'Brakuje user_id lub date' });
+  if (!username || !password || username.length < 3 || password.length < 6) {
+    return res.status(400).json({ error: 'Nieprawidłowy login lub hasło' });
   }
 
-  const query = 'INSERT INTO dates (user_id, selected_date) VALUES (?, ?)';
-
-  db.query(query, [user_id, date], (err, result) => {
-    if (err) {
-      console.error('❌ Błąd zapisu do bazy:', err);
-      return res.status(500).json({ error: 'Błąd zapisu' });
+  try {
+    // Sprawdzenie, czy użytkownik już istnieje
+    const [existingUser] = await db.promise().query('SELECT * FROM users WHERE username = ?', [username]);
+    if (existingUser.length > 0) {
+      return res.status(409).json({ error: 'Użytkownik już istnieje' });
     }
-    res.json({ success: true });
-  });
+
+    const hashed = await bcrypt.hash(password, 10);
+    await db.promise().query('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashed]);
+    res.status(201).json({ message: 'Użytkownik zarejestrowany!' });
+  } catch (err) {
+    console.error('❌ Błąd rejestracji:', err);
+    res.status(500).json({ error: 'Błąd serwera' });
+  }
 });
 
-// 🚀 Uruchomienie serwera
+// Logowanie
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Brak loginu lub hasła' });
+  }
+
+  try {
+    const [results] = await db.promise().query('SELECT * FROM users WHERE username = ?', [username]);
+    if (results.length === 0) {
+      return res.status(401).json({ error: 'Nieprawidłowy login lub hasło' });
+    }
+
+    const user = results[0];
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+      return res.status(401).json({ error: 'Nieprawidłowy login lub hasło' });
+    }
+
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ message: 'Zalogowano!', token, username: user.username });
+  } catch (err) {
+    console.error('❌ Błąd logowania:', err);
+    res.status(500).json({ error: 'Błąd serwera' });
+  }
+});
+
+// Zapis daty (z autoryzacją)
+app.post('/api/save-date', authenticateToken, async (req, res) => {
+  const { date } = req.body;
+  const user_id = req.user.id;
+
+  if (!date) {
+    return res.status(400).json({ error: 'Brak daty' });
+  }
+
+  try {
+    await db.promise().query('INSERT INTO dates (user_id, selected_date) VALUES (?, ?)', [user_id, date]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Błąd zapisu do bazy:', err);
+    res.status(500).json({ error: 'Błąd zapisu' });
+  }
+});
+
+// Weryfikacja tokenu
+app.get('/verify-token', authenticateToken, (req, res) => {
+  res.json({ valid: true, username: req.user.username });
+});
+
+// Uruchomienie serwera
 app.listen(PORT, () => {
   console.log(`✅ Backend działa na http://localhost:${PORT}`);
 });
