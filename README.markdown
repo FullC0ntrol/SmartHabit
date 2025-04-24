@@ -1,10 +1,13 @@
 # HabitTracker - Inteligentny Śledzik Nawyków
-graph TD
-    A[Frontend: React] -->|API| B[Backend: Node.js]
-    B --> C[(MySQL na VPS)]
-    D[Raspberry Pi] -->|sync| B
-    D --> E[Czujnik ruchu PIR]
-    D --> F[Ekran dotykowy 7"]
+
+sequenceDiagram
+    Frontend->>Backend: POST /login {username, password}
+    Backend->>MySQL: Weryfikacja użytkownika
+    MySQL-->>Backend: Dane użytkownika
+    Backend-->>Frontend: JWT token
+    Frontend->>LocalStorage: Zapis tokena
+
+
 **HabitTracker** to aplikacja webowa do śledzenia nawyków i ćwiczeń, z planem rozwoju w estetyczne urządzenie ścienne oparte na Raspberry Pi z ekranem dotykowym. Umożliwia użytkownikom rejestrację, logowanie i przeglądanie spersonalizowanego ekranu głównego z placeholderem dla kalendarza. Aplikacja jest hostowana na VPS z bazą danych MySQL, z frontendem w React i backendem w Node.js/Express.
 
 ## Spis Treści
