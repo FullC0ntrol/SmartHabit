@@ -1,116 +1,168 @@
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faCalendarAlt,
-    faListOl,
-    faDumbbell,
-    faLightbulb,
-    faCog,
-    faSignOutAlt,
-    faBars, // Ikona menu
-} from '@fortawesome/free-solid-svg-icons';
+import React, { useState, useEffect } from 'react';
 import useAuth from '../hooks/useAuth.jsx';
 import CalendarPage from './CalendarPage.jsx';
 
-
 const Home = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [activePage, setActivePage] = useState('home'); // Domyślnie "strona główna"
+    const [showAaa, setShowAaa] = useState(false);
+    const [activeTab, setActiveTab] = useState('Kalendarz');
+    const [error, setError] = useState(null);
     const { logout } = useAuth();
-    
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
+
+    const handleCheckboxChange = (event) => {
+        setShowAaa(event.target.checked);
     };
 
-    const navigateTo = (path) => {
-        setActivePage(path);
-        setIsMenuOpen(false);
-        
+    const tabs = ['Kalendarz', 'Spis Ćwiczeń', 'Trening', 'Pomysły', 'Ustawienia', 'Wyloguj'];
+
+    const handleTabClick = (tab) => {
+        if (tab === 'Wyloguj') {
+            logout();
+        } else {
+            setActiveTab(tab);
+            setError(null); // Reset błędu przy zmianie zakładki
+        }
     };
 
-    const handleLogout = () => {
-        logout();
-        
+    // Particle animation setup
+    useEffect(() => {
+        const canvas = document.getElementById('particle-canvas');
+        if (!canvas) return; // Zabezpieczenie przed brakiem canvasa
+
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+        const numberOfParticles = 100;
+
+        // Set canvas size
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Particle class
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        const initParticles = () => {
+            particlesArray = [];
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        };
+        initParticles();
+
+        // Animation loop
+        const animate = () => {
+            if (!ctx) return; // Zabezpieczenie przed brakiem kontekstu
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+                // Connect particles
+                for (let j = i; j < particlesArray.length; j++) {
+                    const dx = particlesArray[i].x - particlesArray[j].x;
+                    const dy = particlesArray[i].y - particlesArray[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 100) {
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${1 - distance / 100})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[i].x, particlesArray[j].x);
+                        ctx.lineTo(particlesArray[i].y, particlesArray[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        };
+        animate();
+
+        return () => {
+            window.removeEventListener('resize', resizeCanvas);
+        };
+    }, []);
+
+    // Komponent z obsługą błędów
+    const renderContent = () => {
+        try {
+            switch (activeTab) {
+                case 'Kalendarz':
+                    return (
+                        <div className="w-full max-w-4xl bg-white/5 backdrop-blur-md rounded-xl p-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                            <CalendarPage />
+                        </div>
+                    );
+                case 'Spis Ćwiczeń':
+                    return <div className="text-white text-2xl">Spis Ćwiczeń - W budowie</div>;
+                case 'Trening':
+                    return <div className="text-white text-2xl">Trening - W budowie</div>;
+                case 'Pomysły':
+                    return <div className="text-white text-2xl">Pomysły - W budowie</div>;
+                case 'Ustawienia':
+                    return <div className="text-white text-2xl">Ustawienia - W budowie</div>;
+                default:
+                    return <div className="text-white text-2xl">Wybierz zakładkę</div>;
+            }
+        } catch (err) {
+            setError('Wystąpił błąd podczas renderowania treści. Spróbuj ponownie.');
+            return null;
+        }
     };
 
     return (
-        <div className="relative min-h-screen bg-gray-900 text-white">
-            {/* Pływające menu boczne */}
-            <aside
-                className={`fixed top-0 left-0 h-full w-64 bg-gray-800 bg-opacity-75 backdrop-blur-md z-50 transform transition-transform duration-300 ease-in-out ${
-                    isMenuOpen ? 'translate-x-0' : '-translate-x-full'
-                }`}
-            >
-                <div className="p-6 flex flex-col h-full">
-                    <h2 className="text-2xl font-bold mb-8 text-center">SmartHabit</h2>
-                    <nav className="flex-grow">
-                        <ul className="space-y-4">
-                            <li onClick={() => navigateTo('calendar')} className={`cursor-pointer hover:bg-gray-700 rounded-md p-3 flex items-center ${activePage === 'calendar' ? 'bg-blue-600' : ''}`}>
-                                <FontAwesomeIcon icon={faCalendarAlt} className="mr-3" />
-                                Kalendarz
-                            </li>
-                            <li onClick={() => navigateTo('exercises')} className={`cursor-pointer hover:bg-gray-700 rounded-md p-3 flex items-center ${activePage === 'exercises' ? 'bg-blue-600' : ''}`}>
-                                <FontAwesomeIcon icon={faListOl} className="mr-3" />
-                                Spis Ćwiczeń
-                            </li>
-                            <li onClick={() => navigateTo('workout')} className={`cursor-pointer hover:bg-gray-700 rounded-md p-3 flex items-center ${activePage === 'workout' ? 'bg-blue-600' : ''}`}>
-                                <FontAwesomeIcon icon={faDumbbell} className="mr-3" />
-                                Trening
-                            </li>
-                            <li onClick={() => navigateTo('ideas')} className={`cursor-pointer hover:bg-gray-700 rounded-md p-3 flex items-center ${activePage === 'ideas' ? 'bg-blue-600' : ''}`}>
-                                <FontAwesomeIcon icon={faLightbulb} className="mr-3" />
-                                Pomysły
-                            </li>
-                        </ul>
-                    </nav>
-                    <div className="mt-8 border-t border-gray-700 pt-4">
-                        <ul className="space-y-4">
-                            <li onClick={() => navigateTo('settings')} className={`cursor-pointer hover:bg-gray-700 rounded-md p-3 flex items-center ${activePage === 'settings' ? 'bg-blue-600' : ''}`}>
-                                <FontAwesomeIcon icon={faCog} className="mr-3" />
-                                Ustawienia
-                            </li>
-                            <li onClick={handleLogout} className="cursor-pointer hover:bg-red-700 rounded-md p-3 flex items-center">
-                                <FontAwesomeIcon icon={faSignOutAlt} className="mr-3" />
-                                Wyloguj
-                            </li>
-                        </ul>
-                    </div>
+        <div className="relative min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 overflow-hidden">
+            {/* Particle Canvas Background */}
+            <canvas
+                id="particle-canvas"
+                className="absolute inset-0 z-0"
+            ></canvas>
+
+            {/* Glassmorphism Navigation Bar */}
+            <nav className="relative z-10 flex justify-center pt-6">
+                <div className="flex space-x-4 bg-white/10 backdrop-blur-lg rounded-full px-6 py-3 shadow-lg border border-white/20">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => handleTabClick(tab)}
+                            className={`px-4 py-2 rounded-full text-white font-semibold transition-all duration-300 transform hover:scale-105 ${
+                                activeTab === tab && tab !== 'Wyloguj'
+                                    ? 'bg-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.5)]'
+                                    : 'hover:bg-blue-500/50'
+                            } ${tab === 'Wyloguj' ? 'text-red-400 hover:bg-red-500/50' : ''}`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
                 </div>
-            </aside>
+            </nav>
 
-            {/* Przycisk otwierania menu (ikona hamburgera) */}
-            <button
-                onClick={toggleMenu}
-                className="fixed top-4 left-4 bg-gray-800 bg-opacity-50 backdrop-blur-md text-white p-2 rounded-md z-50 hover:bg-gray-700 transition-colors duration-200"
-            >
-                <FontAwesomeIcon icon={faBars} className="text-xl" />
-            </button>
-
-            {/* Główna zawartość strony z animacją w tle */}
-            <div className={`transition-all duration-300 ease-in-out ${isMenuOpen ? 'ml-64' : 'ml-0'} p-8`}>
-                <h1 className="text-3xl font-bold mb-6 text-center">Witaj w SmartHabit!</h1>
-                {/* Animacja na środku (możesz tutaj dodać swoją niestandardową animację) */}
-                <div className="flex justify-center items-center h-64 bg-gray-800 rounded-lg shadow-md">
-                    <div className="animate-pulse text-blue-400 text-4xl">
-                        {/* Możesz tutaj umieścić ikony związane z nawykami, które pulsują */}
-                        <FontAwesomeIcon icon={faCalendarAlt} className="mr-4" />
-                        <FontAwesomeIcon icon={faDumbbell} className="mr-4" />
-                        <FontAwesomeIcon icon={faLightbulb} />
-                        {/* Dodaj więcej ikon */}
-                    </div>
-                </div>
-
-                {/* Tutaj będzie renderowana zawartość poszczególnych zakładek */}
-                {activePage === 'calendar' && <div className="mt-8"><CalendarPage /></div>}
-                {activePage === 'exercises' && <div className="mt-8"><ExerciseList /></div>}
-                {activePage === 'workout' && <div className="mt-8"><WorkoutPage /></div>}
-                {activePage === 'ideas' && <div className="mt-8"><IdeasPage /></div>}
-                {activePage === 'settings' && <div className="mt-8"><SettingsPage /></div>}
-                {activePage === 'home' && (
-                    <div className="mt-8 text-center text-gray-300">
-                        <p>Przegląd Twoich postępów i nadchodzących zadań pojawi się tutaj.</p>
-                        {/* Możesz dodać dodatkowe elementy strony głównej */}
-                    </div>
+            {/* Main Content */}
+            <div className="relative z-10 flex justify-center items-center min-h-[calc(100vh-80px)]">
+                {error ? (
+                    <div className="text-red-400 text-xl">{error}</div>
+                ) : (
+                    renderContent()
                 )}
             </div>
         </div>

@@ -6,7 +6,7 @@ import Home from './pages/Home.jsx';
 
 function App() {
   const [showRegister, setShowRegister] = useState(false);
-  const { isLoggedIn, login, logout, loading: authLoading } = useAuth();
+  const { isLoggedIn, login, loading: authLoading } = useAuth();
 
   if (authLoading) {
     return <p>Ładowanie autoryzacji...</p>;
@@ -27,14 +27,6 @@ function App() {
         )
       ) : (
         <div className="w-full">
-          <div className="flex justify-end p-4">
-            <button
-              onClick={logout}
-              className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-            >
-              Wyloguj
-            </button>
-          </div>
           <Home />
         </div>
       )}
