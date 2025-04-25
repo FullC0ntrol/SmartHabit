@@ -1,172 +1,223 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence, useMotionValue, useSpring, animate } from 'framer-motion';
+import { 
+  RiCalendarLine, 
+  RiRunLine, 
+  RiLightbulbLine,
+  RiSettingsLine,
+  RiLogoutCircleLine,
+  RiHomeLine 
+} from 'react-icons/ri';
 import useAuth from '../hooks/useAuth.jsx';
 import CalendarPage from './CalendarPage.jsx';
 
+
 const Home = () => {
-    const [showAaa, setShowAaa] = useState(false);
-    const [activeTab, setActiveTab] = useState('Kalendarz');
-    const [error, setError] = useState(null);
-    const { logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('home');
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [showAaa, setShowAaa] = useState(false);
+  const [error, setError] = useState(null);
+  const menuRef = useRef(null);
+  const cursorX = useMotionValue(0);
+  const cursorY = useMotionValue(0);
+  const springX = useSpring(cursorX, { damping: 30, stiffness: 400 });
+  const springY = useSpring(cursorY, { damping: 30, stiffness: 400 });
+  const { logout } = useAuth();
 
-    const handleCheckboxChange = (event) => {
-        setShowAaa(event.target.checked);
-    };
+  const tabs = [
+    { id: 'home', icon: <RiHomeLine size={24} />, label: 'Pulpit', color: 'text-blue-400' },
+    { id: 'calendar', icon: <RiCalendarLine size={24} />, label: 'Kalendarz', color: 'text-purple-400' },
+    { id: 'training', icon: <RiRunLine size={24} />, label: 'Trening', color: 'text-green-400' },
+    { id: 'ideas', icon: <RiLightbulbLine size={24} />, label: 'Pomysły', color: 'text-yellow-400' },
+    { id: 'settings', icon: <RiSettingsLine size={24} />, label: 'Ustawienia', color: 'text-gray-400' },
+    { id: 'logout', icon: <RiLogoutCircleLine size={24} />, label: 'Wyloguj', color: 'text-red-400' },
+  ];
 
-    const tabs = ['Kalendarz', 'Spis Ćwiczeń', 'Trening', 'Pomysły', 'Ustawienia', 'Wyloguj'];
+  const handleMouseMove = (e) => {
+    if (menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      cursorX.set(e.clientX - rect.left);
+      cursorY.set(e.clientY - rect.top);
+    }
+  };
 
-    const handleTabClick = (tab) => {
-        if (tab === 'Wyloguj') {
-            logout();
-        } else {
-            setActiveTab(tab);
-            setError(null); // Reset błędu przy zmianie zakładki
-        }
-    };
+  const handleTabClick = (tabId) => {
+    if (tabId === 'logout') {
+      logout();
+    } else {
+      setActiveTab(tabId);
+      setError(null);
+      // Play sound on click
+      const audio = new Audio('https://www.soundjay.com/buttons/button-1.mp3');
+      audio.play().catch(() => {});
+    }
+  };
 
-    // Particle animation setup
-    useEffect(() => {
-        const canvas = document.getElementById('particle-canvas');
-        if (!canvas) return; // Zabezpieczenie przed brakiem canvasa
+  const handleCheckboxChange = (event) => {
+    setShowAaa(event.target.checked);
+  };
 
-        const ctx = canvas.getContext('2d');
-        let particlesArray = [];
-        const numberOfParticles = 100;
+  useEffect(() => {
+    if (hoveredIndex !== null) {
+      animate('#liquid-blob', { scale: 1.2 }, { duration: 0.3 });
+    } else {
+      animate('#liquid-blob', { scale: 1 }, { duration: 0.5 });
+    }
+  }, [hoveredIndex]);
 
-        // Set canvas size
-        const resizeCanvas = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+  // Generowanie cząsteczek
+  const particles = Array.from({ length: 15 }).map(() => ({
+    width: Math.random() * 100 + 50,
+    height: Math.random() * 100 + 50,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    x: (Math.random() - 0.5) * 100,
+    y: (Math.random() - 0.5) * 100,
+    duration: Math.random() * 10 + 10,
+  }));
 
-        // Particle class
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3 + 1;
-                this.speedX = Math.random() * 1 - 0.5;
-                this.speedY = Math.random() * 1 - 0.5;
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
-                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
-            }
-            draw() {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // Initialize particles
-        const initParticles = () => {
-            particlesArray = [];
-            for (let i = 0; i < numberOfParticles; i++) {
-                particlesArray.push(new Particle());
-            }
-        };
-        initParticles();
-
-        // Animation loop
-        const animate = () => {
-            if (!ctx) return; // Zabezpieczenie przed brakiem kontekstu
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-                particlesArray[i].draw();
-                // Connect particles
-                for (let j = i; j < particlesArray.length; j++) {
-                    const dx = particlesArray[i].x - particlesArray[j].x;
-                    const dy = particlesArray[i].y - particlesArray[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 100) {
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${1 - distance / 100})`;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(particlesArray[i].x, particlesArray[j].x);
-                        ctx.lineTo(particlesArray[i].y, particlesArray[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
-        };
-        animate();
-
-        return () => {
-            window.removeEventListener('resize', resizeCanvas);
-        };
-    }, []);
-
-    // Komponent z obsługą błędów
-    const renderContent = () => {
-        try {
-            switch (activeTab) {
-                case 'Kalendarz':
-                    return (
-                        <div className="w-full max-w-4xl bg-white/5 backdrop-blur-md rounded-xl p-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                            <CalendarPage />
-                        </div>
-                    );
-                case 'Spis Ćwiczeń':
-                    return <div className="text-white text-2xl">Spis Ćwiczeń - W budowie</div>;
-                case 'Trening':
-                    return <div className="text-white text-2xl">Trening - W budowie</div>;
-                case 'Pomysły':
-                    return <div className="text-white text-2xl">Pomysły - W budowie</div>;
-                case 'Ustawienia':
-                    return <div className="text-white text-2xl">Ustawienia - W budowie</div>;
-                default:
-                    return <div className="text-white text-2xl">Wybierz zakładkę</div>;
-            }
-        } catch (err) {
-            setError('Wystąpił błąd podczas renderowania treści. Spróbuj ponownie.');
-            return null;
-        }
-    };
-
-    return (
-        <div className="relative min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 overflow-hidden">
-            {/* Particle Canvas Background */}
-            <canvas
-                id="particle-canvas"
-                className="absolute inset-0 z-0"
-            ></canvas>
-
-            {/* Glassmorphism Navigation Bar */}
-            <nav className="relative z-10 flex justify-center pt-6">
-                <div className="flex space-x-4 bg-white/10 backdrop-blur-lg rounded-full px-6 py-3 shadow-lg border border-white/20">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => handleTabClick(tab)}
-                            className={`px-4 py-2 rounded-full text-white font-semibold transition-all duration-300 transform hover:scale-105 ${
-                                activeTab === tab && tab !== 'Wyloguj'
-                                    ? 'bg-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.5)]'
-                                    : 'hover:bg-blue-500/50'
-                            } ${tab === 'Wyloguj' ? 'text-red-400 hover:bg-red-500/50' : ''}`}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
-            </nav>
-
-            {/* Main Content */}
-            <div className="relative z-10 flex justify-center items-center min-h-[calc(100vh-80px)]">
-                {error ? (
-                    <div className="text-red-400 text-xl">{error}</div>
-                ) : (
-                    renderContent()
-                )}
+  // Komponent z obsługą błędów
+  const renderContent = () => {
+    try {
+      switch (activeTab) {
+        case 'home':
+          return <DashboardContent />;
+        case 'calendar':
+          return (
+            <div className="w-full h-full flex justify-center items-center">
+              <CalendarPage />
             </div>
+          );
+        case 'training':
+          return <TrainingContent />;
+        case 'ideas':
+          return <IdeasContent />;
+        case 'settings':
+          return <SettingsContent />;
+        default:
+          return <div className="text-white text-2xl">Wybierz zakładkę</div>;
+      }
+    } catch (err) {
+      setError('Wystąpił błąd podczas renderowania treści. Spróbuj ponownie.');
+      return null;
+    }
+  };
+
+  return (
+    <div className="relative w-full h-screen bg-gray-900 overflow-hidden">
+      {/* Efekt holograficznego tła */}
+      <div className="absolute inset-0 opacity-20">
+        {particles.map((particle, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+            style={{
+              width: particle.width,
+              height: particle.height,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
+            }}
+            animate={{
+              x: [0, particle.x, 0],
+              y: [0, particle.y, 0],
+              opacity: [0.1, 0.3, 0.1],
+            }}
+            transition={{
+              duration: particle.duration,
+              repeat: Infinity,
+              repeatType: 'reverse',
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Główne menu */}
+      <motion.nav
+        ref={menuRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoveredIndex(null)}
+        className="relative z-10 w-64 h-full bg-gray-800/50 backdrop-blur-lg border-r border-gray-700/50 p-6"
+        initial={{ x: -200 }}
+        animate={{ x: 0 }}
+        transition={{ type: 'spring', damping: 25 }}
+      >
+        {/* Logo */}
+        <div className="text-white text-2xl font-bold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+          SmartHabit
         </div>
-    );
+
+        {/* Liquid Cursor Blob */}
+        <motion.div
+          id="liquid-blob"
+          className="absolute w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-20 blur-xl pointer-events-none"
+          style={{ x: springX, y: springY }}
+        />
+
+        {/* Menu Items */}
+        {tabs.map((tab, index) => (
+          <motion.div
+            key={tab.id}
+            className={`flex items-center space-x-4 p-3 rounded-lg mb-2 cursor-pointer relative overflow-hidden ${
+              activeTab === tab.id ? 'bg-gray-700/50' : ''
+            }`}
+            onMouseEnter={() => setHoveredIndex(index)}
+            onClick={() => handleTabClick(tab.id)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className={`text-2xl ${tab.color}`}>{tab.icon}</div>
+            <span className={`text-lg font-medium ${tab.color}`}>{tab.label}</span>
+            {activeTab === tab.id && (
+              <motion.div
+                className="absolute inset-0 border-l-4 border-blue-500"
+                layoutId="activeTab"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              />
+            )}
+          </motion.div>
+        ))}
+      </motion.nav>
+
+      {/* Główna zawartość */}
+      <main className="absolute left-64 right-0 top-0 bottom-0 p-8 overflow-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="h-full"
+          >
+            {error ? (
+              <div className="text-red-400 text-xl">{error}</div>
+            ) : (
+              renderContent()
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+    </div>
+  );
 };
+
+// Komponenty placeholderowe
+const DashboardContent = () => (
+  <div className="h-full flex items-center justify-center">
+    <div className="text-center max-w-2xl">
+      <h1 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+        Witaj w SmartHabit
+      </h1>
+      <p className="text-xl text-gray-400 mb-8">
+        Twoje narzędzie do śledzenia nawyków i osiągania celów
+      </p>
+    </div>
+  </div>
+);
+
+const TrainingContent = () => <div className="p-8 text-white">Trening - W budowie</div>;
+const IdeasContent = () => <div className="p-8 text-white">Pomysły - W budowie</div>;
+const SettingsContent = () => <div className="p-8 text-white">Ustawienia - W budowie</div>;
 
 export default Home;
