@@ -6,23 +6,38 @@ import Home from './pages/Home.jsx';
 
 function App() {
   const [showRegister, setShowRegister] = useState(false);
-  const { isLoggedIn, login } = useAuth(); 
+  const { isLoggedIn, login, logout, loading: authLoading } = useAuth();
 
+  if (authLoading) {
+    return <p>Ładowanie autoryzacji...</p>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      {!isLoggedIn ? (  //jeżeli nie jesteś zalogowany
-        showRegister ? ( 
+      {!isLoggedIn ? (
+        showRegister ? (
           <RegisterForm onRegisterSuccess={() => setShowRegister(false)} />
         ) : (
           <LoginForm
-            onLoginSuccess={(username) => {
-              login(username); // Wywołujemy funkcję login z useAuth
+            onLoginSuccess={({ username, token }) => {
+              login(username, token); // Wywołujemy funkcję login z useAuth
             }}
             onSwitchToRegister={() => setShowRegister(true)}
           />
         )
-      ) : <Home/>}
+      ) : (
+        <div className="w-full">
+          <div className="flex justify-end p-4">
+            <button
+              onClick={logout}
+              className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
+            >
+              Wyloguj
+            </button>
+          </div>
+          <Home />
+        </div>
+      )}
     </div>
   );
 }
