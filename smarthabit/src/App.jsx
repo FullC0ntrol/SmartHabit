@@ -6,14 +6,14 @@ import Home from './pages/Home.jsx';
 
 function App() {
   const [showRegister, setShowRegister] = useState(false);
-  const { isLoggedIn, login, logout, loading: authLoading } = useAuth();
+  const { isLoggedIn, login, loading: authLoading } = useAuth();
 
   if (authLoading) {
     return <p>Ładowanie autoryzacji...</p>;
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+    <div className=" flex flex-col items-center justify-center bg-gray-100">
       {!isLoggedIn ? (
         showRegister ? (
           <RegisterForm onRegisterSuccess={() => setShowRegister(false)} />
@@ -27,14 +27,6 @@ function App() {
         )
       ) : (
         <div className="w-full">
-          <div className="flex justify-end p-4">
-            <button
-              onClick={logout}
-              className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-            >
-              Wyloguj
-            </button>
-          </div>
           <Home />
         </div>
       )}
